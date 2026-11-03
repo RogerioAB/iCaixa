@@ -1,18 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import {
-  ean13Valido,
-  gerarCodigo,
-  lerEtiqueta,
-  lerQrValidacao,
-  montarConta,
-  normalizarNumero,
-  textoQrValidacao,
-} from '../supabase/functions/_shared/comanda'
-
-const produtos = [
-  { id: 'agua', nome: 'Água mineral', preco_centavos: 600 },
-  { id: 'caipirinha', nome: 'Caipirinha', preco_centavos: 2000 },
-]
+import { ean13Valido, gerarCodigo, lerEtiqueta, lerQrValidacao, normalizarNumero, textoQrValidacao } from '../supabase/functions/_shared/comanda'
 
 describe('etiqueta da balança', () => {
   it('lê o valor da etiqueta da foto (R$ 21,93)', () => {
@@ -34,18 +21,6 @@ describe('número da comanda', () => {
     expect(normalizarNumero('')).toBeNull()
     expect(normalizarNumero('0000')).toBeNull()
     expect(normalizarNumero('12345678')).toBeNull()
-  })
-})
-
-describe('montarConta', () => {
-  it('soma etiquetas e bebidas com os preços do banco', () => {
-    const c = montarConta({ numero: '992', etiquetas: ['2000000021935'], bebidas: { agua: 1, caipirinha: 2 } }, produtos)
-    expect(c).toMatchObject({ numero: '0000992', total_centavos: 2193 + 600 + 4000 })
-  })
-  it('recusa produto desconhecido, quantidade negativa e conta vazia', () => {
-    expect(montarConta({ numero: '992', etiquetas: [], bebidas: { vinho: 1 } }, produtos)).toHaveProperty('erro')
-    expect(montarConta({ numero: '992', etiquetas: [], bebidas: { agua: -1 } }, produtos)).toHaveProperty('erro')
-    expect(montarConta({ numero: '992', etiquetas: [], bebidas: {} }, produtos)).toHaveProperty('erro')
   })
 })
 

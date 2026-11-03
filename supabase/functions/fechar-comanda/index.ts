@@ -1,9 +1,12 @@
-// Público (sem login): o cliente envia o que leu na comanda, o servidor recalcula
-// a conta com os preços do banco, grava o fechamento e cria a cobrança no provedor.
+// Público (sem login): fecha a conta de uma leitura já feita (ler-comanda) e cria a cobrança.
+// A conta vem da leitura gravada no banco; o celular só confirma o número da comanda e o método.
 
-import { montarConta, type Produto } from '../_shared/comanda.ts'
+import { normalizarNumero } from '../_shared/comanda.ts'
 import { adminClient, json, lerPost } from '../_shared/http.ts'
 import { escolherProvedor, type MetodoPagamento } from '../_shared/pagamento.ts'
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+const VALIDADE_LEITURA_MS = 30 * 60 * 1000
 
 Deno.serve(async (req) => {
   const body = await lerPost(req)
@@ -11,34 +14,38 @@ Deno.serve(async (req) => {
 
   const metodo = body.metodo === 'cartao' ? 'cartao' : body.metodo === 'pix' ? 'pix' : null
   if (!metodo) return json({ erro: 'Escolha Pix ou cartão.' }, 400)
+  const numero = normalizarNumero(String(body.numero ?? ''))
+  if (!numero) return json({ erro: 'Confira o número da comanda.' }, 400)
+  const leituraId = String(body.leitura_id ?? '')
+  if (!UUID.test(leituraId)) return json({ erro: 'Fotografe a comanda de novo.' }, 400)
 
   const db = adminClient()
-  const { data: produtos, error: errProdutos } = await db
-    .from('produtos')
-    .select('id, nome, preco_centavos')
-    .eq('ativo', true)
-  if (errProdutos) return json({ erro: 'Não foi possível carregar os preços.' }, 500)
+  const { data: leitura } = await db
+    .from('leituras')
+    .select('id, numero_lido, itens, total_centavos, avisos, mesa, criado_em')
+    .eq('id', leituraId)
+    .maybeSingle()
+  if (!leitura || Date.now() - new Date(leitura.criado_em).getTime() > VALIDADE_LEITURA_MS) {
+    return json({ erro: 'Esta leitura expirou. Fotografe a comanda de novo.' }, 410)
+  }
+  if (!(leitura.total_centavos > 0)) return json({ erro: 'Não encontrei nada para cobrar nesta comanda.' }, 400)
 
-  const conta = montarConta(
-    {
-      numero: String(body.numero ?? ''),
-      etiquetas: Array.isArray(body.etiquetas) ? body.etiquetas.map(String) : [],
-      bebidas: (body.bebidas && typeof body.bebidas === 'object' ? body.bebidas : {}) as Record<string, number>,
-    },
-    (produtos ?? []) as Produto[],
-  )
-  if ('erro' in conta) return json({ erro: conta.erro }, 400)
+  const avisos = [...(leitura.avisos ?? [])]
+  if (leitura.numero_lido && leitura.numero_lido !== numero) {
+    avisos.push(`Número informado pelo cliente (${numero}) diferente do lido na foto (${leitura.numero_lido}).`)
+  }
 
   const provedor = escolherProvedor(Deno.env.get('PAGAMENTO_PROVEDOR'))
-  const mesa = typeof body.mesa === 'string' ? body.mesa.slice(0, 20) : null
-
   const { data: fechamento, error } = await db
     .from('fechamentos')
     .insert({
-      numero: conta.numero,
-      mesa,
-      itens: conta.itens,
-      total_centavos: conta.total_centavos,
+      numero,
+      numero_lido: leitura.numero_lido,
+      leitura_id: leitura.id,
+      mesa: leitura.mesa,
+      itens: leitura.itens,
+      avisos,
+      total_centavos: leitura.total_centavos,
       metodo,
       provedor: provedor.nome,
       status: 'pendente',
@@ -50,23 +57,12 @@ Deno.serve(async (req) => {
   try {
     const cobranca = await provedor.criarCobranca({
       fechamentoId: fechamento.id,
-      numero: conta.numero,
-      totalCentavos: conta.total_centavos,
+      numero,
+      totalCentavos: leitura.total_centavos,
       metodo: metodo as MetodoPagamento,
     })
-    await db
-      .from('fechamentos')
-      .update({ provedor_ref: cobranca.referencia, cobranca })
-      .eq('id', fechamento.id)
-    return json({
-      id: fechamento.id,
-      numero: conta.numero,
-      itens: conta.itens,
-      total_centavos: conta.total_centavos,
-      metodo,
-      provedor: provedor.nome,
-      cobranca,
-    })
+    await db.from('fechamentos').update({ provedor_ref: cobranca.referencia, cobranca }).eq('id', fechamento.id)
+    return json({ id: fechamento.id })
   } catch (e) {
     console.error('criarCobranca falhou', e)
     await db.from('fechamentos').update({ status: 'cancelado' }).eq('id', fechamento.id)

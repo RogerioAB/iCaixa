@@ -4,9 +4,11 @@
 
 
 -- Tabela de preços (bebidas). Comida, diversos e sobremesas vêm pela etiqueta da balança.
+-- linha_comanda = o nome impresso na grade BEBIDAS da comanda; a IA usa para ler as marcações.
 create table public.produtos (
   id text primary key,
   nome text not null,
+  linha_comanda text,
   preco_centavos integer not null check (preco_centavos > 0),
   categoria text not null default 'bebida',
   ordem integer not null default 0,
@@ -22,12 +24,29 @@ create table public.equipe (
   criado_em timestamptz not null default now()
 );
 
+-- Cada foto de comanda lida pela IA (Edge Function ler-comanda).
+create table public.leituras (
+  id uuid primary key default gen_random_uuid(),
+  numero_lido char(7),
+  extracao jsonb not null,
+  itens jsonb not null,
+  total_centavos integer not null,
+  avisos jsonb not null default '[]',
+  mesa text,
+  ip text,
+  criado_em timestamptz not null default now()
+);
+create index leituras_ip_criado on public.leituras (ip, criado_em desc);
+
 -- Cada vez que um cliente fecha a comanda pelo app.
 create table public.fechamentos (
   id uuid primary key default gen_random_uuid(),
   numero char(7) not null check (numero ~ '^[0-9]{7}$'),
+  numero_lido char(7),
+  leitura_id uuid references public.leituras (id),
   mesa text,
   itens jsonb not null,
+  avisos jsonb not null default '[]',
   total_centavos integer not null check (total_centavos > 0),
   metodo text not null check (metodo in ('pix', 'cartao')),
   provedor text not null,
@@ -59,6 +78,7 @@ $$;
 alter table public.produtos enable row level security;
 alter table public.equipe enable row level security;
 alter table public.fechamentos enable row level security;
+alter table public.leituras enable row level security;
 
 -- Preços: qualquer um lê os ativos (o app do cliente mostra a lista); só admin altera.
 create policy produtos_leitura on public.produtos for select using (ativo or public.eh_admin());
@@ -73,19 +93,23 @@ create policy equipe_leitura on public.equipe for select to authenticated
 create policy fechamentos_equipe on public.fechamentos for select to authenticated
   using (public.eh_equipe());
 
+-- Leituras: só a equipe lê (auditoria). Escrita só pela Edge Function.
+create policy leituras_equipe on public.leituras for select to authenticated
+  using (public.eh_equipe());
+
 -- Preços informados pelo restaurante em 03/11/2026.
-insert into public.produtos (id, nome, preco_centavos, ordem, ativo) values
-  ('refrigerante',  'Refrigerante (lata 350 ml)', 800, 10, true),
-  ('agua',          'Água mineral',               600, 20, true),
-  ('mate',          'Mate Leão',                  700, 30, true),
-  ('suco-laranja',  'Suco de laranja',           1200, 40, true),
-  ('suco-limao',    'Suco de limão',             1100, 50, true),
-  ('suco-fruta',    'Suco de fruta (polpa)',     1200, 60, true),
-  ('suco-mix',      'Suco mix (2 frutas)',       1500, 70, true),
-  ('cha',           'Chá artesanal',             1400, 80, true),
-  ('taca-vinho',    'Taça de vinho 200 ml',      2500, 90, true),
-  ('vinho-tinto',   'Garrafa de vinho tinto',   12000, 100, true),
-  ('vinho-branco',  'Garrafa de vinho branco',   9500, 110, true),
-  ('caipirinha',    'Caipirinha',                2000, 120, true),
-  ('caipivodka',    'Caipivodka',                2500, 130, true),
-  ('cafe',          'Café espresso',              700, 140, true);
+insert into public.produtos (id, nome, linha_comanda, preco_centavos, ordem) values
+  ('refrigerante',  'Refrigerante (lata 350 ml)', 'Refrigerante',        800, 10),
+  ('agua',          'Água mineral',               'Água',                600, 20),
+  ('mate',          'Mate Leão',                  'Mate Leão',           700, 30),
+  ('suco-laranja',  'Suco de laranja',            'Suco Laranja/Limão', 1200, 40),
+  ('suco-limao',    'Suco de limão',              'Suco Laranja/Limão', 1100, 50),
+  ('suco-fruta',    'Suco de fruta (polpa)',      'Suco de Fruta',      1200, 60),
+  ('suco-mix',      'Suco mix (2 frutas)',        'Suco Mix',           1500, 70),
+  ('cha',           'Chá artesanal',              'Chá Artesanal',      1400, 80),
+  ('taca-vinho',    'Taça de vinho 200 ml',       'Taça Vinho 200 ml',  2500, 90),
+  ('vinho-tinto',   'Garrafa de vinho tinto',     'Gr. Vinho Tinto',   12000, 100),
+  ('vinho-branco',  'Garrafa de vinho branco',    'Gr. Vinho Branco',   9500, 110),
+  ('caipirinha',    'Caipirinha',                 'Caipirinha',         2000, 120),
+  ('caipivodka',    'Caipivodka',                 'Caipivodka',         2500, 130),
+  ('cafe',          'Café espresso',              'Café Expresso',       700, 140);

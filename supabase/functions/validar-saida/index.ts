@@ -5,7 +5,7 @@ import { createClient } from '@supabase/supabase-js'
 import { normalizarNumero } from '../_shared/comanda.ts'
 import { adminClient, json, lerPost } from '../_shared/http.ts'
 
-const CAMPOS = 'id, numero, itens, total_centavos, metodo, pago_em, usado_em'
+const CAMPOS = 'id, numero, numero_lido, itens, avisos, total_centavos, metodo, pago_em, usado_em'
 
 Deno.serve(async (req) => {
   const body = await lerPost(req)

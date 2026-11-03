@@ -1,5 +1,5 @@
 import { FunctionsHttpError } from '@supabase/supabase-js'
-import type { ItemConta, Produto } from './comanda'
+import type { ItemConta } from './comanda'
 import { supabase } from './supabase'
 
 export type Cobranca = { referencia: string; pixCopiaECola?: string; pixQrImagem?: string; urlPagamento?: string }
@@ -7,7 +7,9 @@ export type Cobranca = { referencia: string; pixCopiaECola?: string; pixQrImagem
 export type Fechamento = {
   id: string
   numero: string
+  numero_lido?: string | null
   itens: ItemConta[]
+  avisos?: string[]
   total_centavos: number
   metodo: 'pix' | 'cartao'
   provedor: string
@@ -36,23 +38,19 @@ async function chamar<T>(nome: string, body: unknown): Promise<T> {
   return data as T
 }
 
-export async function listarProdutos(): Promise<Produto[]> {
-  const { data, error } = await supabase
-    .from('produtos')
-    .select('id, nome, preco_centavos')
-    .eq('ativo', true)
-    .order('ordem')
-  if (error) throw new Error('Não foi possível carregar os preços.')
-  return data
+export type Leitura = {
+  leitura_id: string
+  numero_lido: string | null
+  itens: ItemConta[]
+  total_centavos: number
+  avisos: string[]
 }
 
-export const fecharComanda = (pedido: {
-  numero: string
-  etiquetas: string[]
-  bebidas: Record<string, number>
-  metodo: 'pix' | 'cartao'
-  mesa?: string
-}) => chamar<Fechamento>('fechar-comanda', pedido)
+/** Envia a foto da comanda para a IA ler (Edge Function ler-comanda). */
+export const lerComanda = (imagem: string, mesa?: string) => chamar<Leitura>('ler-comanda', { imagem, tipo: 'image/jpeg', mesa })
+
+export const fecharComanda = (pedido: { leitura_id: string; numero: string; metodo: 'pix' | 'cartao' }) =>
+  chamar<{ id: string }>('fechar-comanda', pedido)
 
 export const statusFechamento = (id: string) => chamar<Fechamento>('status-fechamento', { id })
 

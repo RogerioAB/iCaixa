@@ -3,6 +3,9 @@
 project_id = "icaixa"
 
 # Funções públicas: o cliente não tem login.
+[functions.ler-comanda]
+verify_jwt = false
+
 [functions.fechar-comanda]
 verify_jwt = false
 

@@ -13,7 +13,7 @@ Deno.serve(async (req) => {
 
   const { data, error } = await adminClient()
     .from('fechamentos')
-    .select('id, numero, itens, total_centavos, metodo, provedor, cobranca, status, codigo, pago_em, usado_em')
+    .select('id, numero, itens, avisos, total_centavos, metodo, provedor, cobranca, status, codigo, pago_em, usado_em')
     .eq('id', id)
     .maybeSingle()
   if (error) return json({ erro: 'Falha ao consultar.' }, 500)

@@ -38,6 +38,7 @@ function Veredito({ r, onConfirmar, confirmando }: { r: ResultadoValidacao; onCo
   const detalhes = [
     `Comanda ${f.numero} · ${formatarReais(f.total_centavos)} · ${f.metodo === 'pix' ? 'Pix' : 'Cartão'}${f.pago_em ? ` · ${hora(f.pago_em)}` : ''}`,
     ...f.itens.map((it) => `${it.descricao}: ${formatarReais(it.centavos)}`),
+    ...(f.avisos ?? []).map((a) => `Atenção: ${a}`),
   ]
   if (r.resultado === 'ja_utilizada')
     return <Bloco tom="erro" titulo="Já utilizada" linhas={[`Saída registrada às ${f.usado_em ? hora(f.usado_em) : '?'}.`, ...detalhes]} />

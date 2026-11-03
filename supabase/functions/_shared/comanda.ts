@@ -1,6 +1,5 @@
 // Regras de negócio puras, sem APIs do Deno nem do navegador.
-// Usadas pelas Edge Functions e também importadas pelo front-end (src/lib/comanda.ts),
-// para que a conta feita no celular e a feita no servidor sejam sempre a mesma.
+// Usadas pelas Edge Functions e também importadas pelo front-end (src/lib/comanda.ts).
 
 /** Confere o dígito verificador de um EAN-13. */
 export function ean13Valido(codigo: string): boolean {
@@ -38,48 +37,7 @@ export function normalizarNumero(entrada: string): string | null {
   return d.padStart(7, '0')
 }
 
-export type Produto = { id: string; nome: string; preco_centavos: number }
 export type ItemConta = { descricao: string; centavos: number; tipo: 'etiqueta' | 'produto'; ref: string; qtd: number }
-
-export type PedidoFechamento = {
-  numero: string
-  etiquetas: string[]
-  bebidas: Record<string, number>
-}
-
-/**
- * Monta a conta a partir do que o cliente informou e da tabela de preços.
- * O servidor sempre recalcula com esta função: o total enviado pelo celular é ignorado.
- */
-export function montarConta(
-  pedido: PedidoFechamento,
-  produtos: Produto[],
-): { numero: string; itens: ItemConta[]; total_centavos: number } | ErroEtiqueta {
-  const numero = normalizarNumero(pedido.numero)
-  if (!numero) return { erro: 'Número da comanda inválido.' }
-  if (!Array.isArray(pedido.etiquetas) || pedido.etiquetas.length > 30) return { erro: 'Etiquetas inválidas.' }
-
-  const itens: ItemConta[] = []
-  for (const [i, cod] of pedido.etiquetas.entries()) {
-    const e = lerEtiqueta(String(cod))
-    if ('erro' in e) return { erro: `Etiqueta ${i + 1}: ${e.erro}` }
-    itens.push({ descricao: `Etiqueta ${i + 1} (balança)`, centavos: e.centavos, tipo: 'etiqueta', ref: e.codigo, qtd: 1 })
-  }
-
-  const porId = new Map(produtos.map((p) => [p.id, p]))
-  for (const [id, qtdBruta] of Object.entries(pedido.bebidas ?? {})) {
-    const qtd = Number(qtdBruta)
-    if (qtd === 0) continue
-    if (!Number.isInteger(qtd) || qtd < 0 || qtd > 50) return { erro: 'Quantidade inválida.' }
-    const p = porId.get(id)
-    if (!p) return { erro: `Produto desconhecido: ${id}` }
-    itens.push({ descricao: `${qtd}× ${p.nome}`, centavos: qtd * p.preco_centavos, tipo: 'produto', ref: id, qtd })
-  }
-
-  const total_centavos = itens.reduce((s, it) => s + it.centavos, 0)
-  if (total_centavos <= 0) return { erro: 'A conta está vazia.' }
-  return { numero, itens, total_centavos }
-}
 
 /** Código de validação curto, sem letras ambíguas (0/O, 1/I). */
 export function gerarCodigo(bytes: Uint8Array): string {

@@ -89,7 +89,7 @@ export default function PagamentoPage() {
     <Pagina>
       <Cartao titulo={`Comanda ${f.numero}`}>
         <div className="flex flex-col gap-1 font-mono text-sm">
-          {f.itens.map((it, i) => (
+          {(f.itens ?? []).map((it, i) => (
             <div key={i} className="flex justify-between gap-3">
               <span>{it.descricao}</span>
               <span className="tabular-nums">{formatarReais(it.centavos)}</span>
@@ -131,7 +131,7 @@ export default function PagamentoPage() {
       )}
       {erro && <Aviso tom="erro">{erro}</Aviso>}
       <Link to="/comanda" className={botao}>
-        Voltar e corrigir itens
+        Fotografar a comanda de novo
       </Link>
     </Pagina>
   )
