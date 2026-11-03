@@ -20,20 +20,17 @@ Deno.serve(async (req) => {
   if (!auth?.user) return json({ erro: 'Faça login.' }, 401)
 
   const db = adminClient()
-  const { data: membro } = await db.from('equipe').select('user_id').eq('user_id', auth.user.id).maybeSingle()
+  const { data: membro } = await db.from('equipe').select('user_id, papel, restaurante_id').eq('user_id', auth.user.id).maybeSingle()
   if (!membro) return json({ erro: 'Seu usuário não faz parte da equipe.' }, 403)
 
   const numero = normalizarNumero(String(body.numero ?? ''))
   const codigo = String(body.codigo ?? '').trim().toUpperCase()
   if (!numero || !/^[A-Z0-9]{6}$/.test(codigo)) return json({ resultado: 'invalido' })
 
-  const { data: f, error } = await db
-    .from('fechamentos')
-    .select(CAMPOS)
-    .eq('numero', numero)
-    .eq('codigo', codigo)
-    .eq('status', 'pago')
-    .maybeSingle()
+  // A portaria só vê comandas do próprio restaurante; o admin geral vê todas.
+  let consulta = db.from('fechamentos').select(CAMPOS).eq('numero', numero).eq('codigo', codigo).eq('status', 'pago')
+  if (membro.restaurante_id) consulta = consulta.eq('restaurante_id', membro.restaurante_id)
+  const { data: f, error } = await consulta.limit(1).maybeSingle()
   if (error) return json({ erro: 'Falha ao consultar.' }, 500)
   if (!f) return json({ resultado: 'nao_encontrada', numero, codigo })
   if (f.usado_em) return json({ resultado: 'ja_utilizada', fechamento: f })

@@ -23,6 +23,10 @@ Deno.serve(async (req) => {
   if (imagem.length * 0.75 > MAX_BYTES_IMAGEM) return json({ erro: 'A foto é grande demais.' }, 413)
 
   const db = adminClient()
+  const slug = String(body.restaurante ?? '').toLowerCase()
+  const { data: restaurante } = await db.from('restaurantes').select('id, nome').eq('slug', slug).eq('ativo', true).maybeSingle()
+  if (!restaurante) return json({ erro: 'Restaurante não encontrado. Leia de novo o QR Code da mesa.' }, 404)
+
   const ip = (req.headers.get('x-forwarded-for') ?? '').split(',')[0].trim() || null
 
   // Cada leitura custa uma chamada à IA: limita por IP para evitar abuso.
@@ -35,9 +39,10 @@ Deno.serve(async (req) => {
   const { data: produtos, error: errProdutos } = await db
     .from('produtos')
     .select('id, nome, preco_centavos, linha_comanda')
+    .eq('restaurante_id', restaurante.id)
     .eq('ativo', true)
     .order('ordem')
-  if (errProdutos || !produtos?.length) return json({ erro: 'Não foi possível carregar os preços.' }, 500)
+  if (errProdutos) return json({ erro: 'Não foi possível carregar os preços.' }, 500)
 
   let extracao: Extracao
   try {
@@ -48,14 +53,14 @@ Deno.serve(async (req) => {
       fallbacks: 'default',
       output_config: {
         effort: 'medium',
-        format: { type: 'json_schema', schema: schemaExtracao(produtos.map((p) => p.id)) },
+        format: { type: 'json_schema', schema: schemaExtracao((produtos ?? []).map((p) => p.id)) },
       },
       messages: [
         {
           role: 'user',
           content: [
             { type: 'image', source: { type: 'base64', media_type: tipo, data: imagem } },
-            { type: 'text', text: promptLeitura(produtos as ProdutoComanda[]) },
+            { type: 'text', text: promptLeitura((produtos ?? []) as ProdutoComanda[], restaurante.nome) },
           ],
         },
       ],
@@ -74,12 +79,13 @@ Deno.serve(async (req) => {
     return json({ erro: 'A foto não ficou legível.', avisos: extracao.anotacoes, ilegivel: true }, 422)
   }
 
-  const conta = montarContaDaLeitura(extracao, produtos as ProdutoComanda[])
+  const conta = montarContaDaLeitura(extracao, (produtos ?? []) as ProdutoComanda[])
   const mesa = typeof body.mesa === 'string' ? body.mesa.slice(0, 20) : null
 
   const { data: leitura, error } = await db
     .from('leituras')
-    .insert({ numero_lido: conta.numero_lido, extracao, itens: conta.itens, total_centavos: conta.total_centavos, avisos: conta.avisos, mesa, ip })
+    
+    .insert({ restaurante_id: restaurante.id, numero_lido: conta.numero_lido, extracao, itens: conta.itens, total_centavos: conta.total_centavos, avisos: conta.avisos, mesa, ip })
     .select('id')
     .single()
   if (error) return json({ erro: 'Não foi possível registrar a leitura.' }, 500)

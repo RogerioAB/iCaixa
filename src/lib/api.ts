@@ -18,6 +18,7 @@ export type Fechamento = {
   codigo: string | null
   pago_em: string | null
   usado_em: string | null
+  restaurante?: { slug: string; nome: string; logo_url: string | null } | null
 }
 
 export type ResultadoValidacao =
@@ -47,7 +48,8 @@ export type Leitura = {
 }
 
 /** Envia a foto da comanda para a IA ler (Edge Function ler-comanda). */
-export const lerComanda = (imagem: string, mesa?: string) => chamar<Leitura>('ler-comanda', { imagem, tipo: 'image/jpeg', mesa })
+export const lerComanda = (imagem: string, restaurante: string, mesa?: string) =>
+  chamar<Leitura>('ler-comanda', { imagem, tipo: 'image/jpeg', restaurante, mesa })
 
 export const fecharComanda = (pedido: { leitura_id: string; numero: string; metodo: 'pix' | 'cartao' }) =>
   chamar<{ id: string }>('fechar-comanda', pedido)

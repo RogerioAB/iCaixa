@@ -1,33 +1,13 @@
 import type { Session } from '@supabase/supabase-js'
-import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Leitor } from '../components/Leitor'
-import { Aviso, Cartao, Pagina, botao, botaoPrimario, campo } from '../components/ui'
+import { Login } from '../components/Login'
+import { Aviso, Cartao, Pagina, botao, campo } from '../components/ui'
 import { validarSaida, type Fechamento, type ResultadoValidacao } from '../lib/api'
 import { formatarReais, lerQrValidacao } from '../lib/comanda'
 import { supabase } from '../lib/supabase'
 
 const hora = (iso: string) => new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-
-function Login() {
-  const [email, setEmail] = useState('')
-  const [senha, setSenha] = useState('')
-  const [erro, setErro] = useState<string | null>(null)
-  async function entrar(e: FormEvent) {
-    e.preventDefault()
-    const { error } = await supabase.auth.signInWithPassword({ email, password: senha })
-    if (error) setErro('E-mail ou senha incorretos.')
-  }
-  return (
-    <Cartao titulo="Portaria">
-      <form className="flex flex-col gap-2" onSubmit={entrar}>
-        <input id="email" className={campo} type="email" placeholder="E-mail" autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} />
-        <input id="senha" className={campo} type="password" placeholder="Senha" autoComplete="current-password" value={senha} onChange={(e) => setSenha(e.target.value)} />
-        <button className={botaoPrimario}>Entrar</button>
-        {erro && <Aviso tom="erro">{erro}</Aviso>}
-      </form>
-    </Cartao>
-  )
-}
 
 function Veredito({ r, onConfirmar, confirmando }: { r: ResultadoValidacao; onConfirmar: () => void; confirmando: boolean }) {
   if (r.resultado === 'invalido')
@@ -188,7 +168,7 @@ export default function PortariaPage() {
           </button>
         </>
       ) : (
-        <Login />
+        <Login titulo="Portaria" />
       )}
     </Pagina>
   )

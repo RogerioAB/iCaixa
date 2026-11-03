@@ -22,7 +22,7 @@ Deno.serve(async (req) => {
   const db = adminClient()
   const { data: leitura } = await db
     .from('leituras')
-    .select('id, numero_lido, itens, total_centavos, avisos, mesa, criado_em')
+      .select('id, restaurante_id, numero_lido, itens, total_centavos, avisos, mesa, criado_em')
     .eq('id', leituraId)
     .maybeSingle()
   if (!leitura || Date.now() - new Date(leitura.criado_em).getTime() > VALIDADE_LEITURA_MS) {
@@ -39,6 +39,7 @@ Deno.serve(async (req) => {
   const { data: fechamento, error } = await db
     .from('fechamentos')
     .insert({
+      restaurante_id: leitura.restaurante_id,
       numero,
       numero_lido: leitura.numero_lido,
       leitura_id: leitura.id,

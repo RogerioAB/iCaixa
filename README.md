@@ -24,6 +24,19 @@ Edge Functions (`supabase/functions`):
 
 As regras de negócio ficam em `supabase/functions/_shared/`: `comanda.ts` (etiqueta, número, QR) e `leitura.ts` (prompt, schema e a conta montada a partir do que a IA leu). Ambos são cobertos por `npm test`.
 
+### Restaurantes
+
+Cada restaurante tem um endereço próprio, `icaixa.zarpa.tech/<slug>` (ou `/<slug>/<mesa>`), que é o que vai no QR Code das mesas. Nome, bairro, site, logo e a tabela de bebidas ficam na tabela `restaurantes` e são editados em `/admin`, que também gera o QR Code para imprimir. Os logos ficam no bucket público `logos` do Storage.
+
+Papéis na tabela `equipe`: `admin` sem restaurante é o administrador geral (cadastra restaurantes); `portaria` pertence a um restaurante e só valida comandas dele.
+
+Para criar o primeiro administrador: crie o usuário em Supabase → Authentication → Users → Add user e rode no SQL Editor:
+
+```sql
+insert into public.equipe (user_id, nome, papel)
+select id, 'Seu nome', 'admin' from auth.users where email = 'seu@email';
+```
+
 ### Leitura da comanda
 
 - **Etiquetas:** vale o código de barras (com o dígito verificador conferido). Se ele estiver ilegível, entra o TOTAL impresso, com um aviso para a portaria.

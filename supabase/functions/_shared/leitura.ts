@@ -42,7 +42,7 @@ export function schemaExtracao(idsProdutos: string[]) {
           additionalProperties: false,
           required: ['produto_id', 'quantidade'],
           properties: {
-            produto_id: { type: 'string', enum: idsProdutos },
+            produto_id: { type: 'string', enum: idsProdutos.length ? idsProdutos : ['nenhum'] },
             quantidade: { type: 'integer' },
           },
         },
@@ -52,24 +52,24 @@ export function schemaExtracao(idsProdutos: string[]) {
   }
 }
 
-export function promptLeitura(produtos: ProdutoComanda[]): string {
+export function promptLeitura(produtos: ProdutoComanda[], restaurante = 'o restaurante'): string {
   const linhas = produtos
     .filter((p) => p.linha_comanda)
     .map((p) => `- linha "${p.linha_comanda}" -> produto_id "${p.id}" (${p.nome})`)
     .join('\n')
-  return `Esta é a foto de uma comanda individual de restaurante. Extraia os dados para fechar a conta do cliente.
+  return `Esta é a foto de uma comanda individual de ${restaurante}. Extraia os dados para fechar a conta do cliente.
 
 Como a comanda é:
-- No topo, à direita, há o número da comanda com 7 dígitos (ex.: 0000992). Os primeiros dígitos às vezes saem falhados; devolva só os dígitos que conseguir ler com segurança, sem inventar.
-- Etiquetas adesivas da balança (comida, "DIVERSOS", sobremesa) podem estar coladas em qualquer lugar. Cada uma tem "TOTAL R$" impresso e um código de barras com 13 dígitos impressos embaixo, começando com 2. Para cada etiqueta, devolva os 13 dígitos exatamente como impressos (null se não der para ler todos) e o TOTAL impresso em centavos (R$ 21,93 -> 2193).
-- A grade "BEBIDAS" tem uma linha por bebida e várias colunas. O garçom faz um risco para cada unidade pedida; ele não escreve números. Conte os riscos de cada linha: cada risco vale 1 unidade. Ignore linhas sem risco.
+- Em algum lugar do topo há o número da comanda (normalmente 7 dígitos, ex.: 0000992). Os primeiros dígitos às vezes saem falhados; devolva só os dígitos que conseguir ler com segurança, sem inventar. Não confunda com a sequência (SEQ.) ou a data impressas na etiqueta da balança.
+- Etiquetas da balança (comida, "DIVERSOS", sobremesa) podem estar coladas ou impressas em qualquer lugar. Cada uma tem um TOTAL R$ impresso e um código de barras com 13 dígitos embaixo, começando com 2. Para cada etiqueta, devolva os 13 dígitos exatamente como impressos (null se não der para ler todos) e o TOTAL impresso em centavos (R$ 21,93 -> 2193).
+- Há uma grade de bebidas com uma linha por produto. O garçom faz um risco (ou marca) para cada unidade pedida; ele não escreve números. Conte as marcas de cada linha: cada marca vale 1 unidade. Ignore linhas sem marca. Ignore valores escritos à mão numa coluna de valor: o preço vem da tabela do restaurante.
 - Linhas da grade e o produto_id de cada uma:
 ${linhas}
-- Se algo estiver escrito à mão numa linha em branco da grade ou no quadro SOBREMESAS, não converta em produto: copie o texto em anotacoes.
+- Se houver marca numa linha que não está na lista acima, ou algo escrito à mão fora da grade, não converta em produto: descreva em anotacoes.
 
 Regras:
 - Não invente nada. Se a foto estiver cortada, borrada ou não for uma comanda, marque foto_legivel = false e explique em anotacoes.
-- Se um risco for ambíguo (ex.: pode ser sujeira ou um risco cortado), conte-o e descreva a dúvida em anotacoes.`
+- Se uma marca for ambígua (ex.: pode ser sujeira ou um risco cortado), conte-a e descreva a dúvida em anotacoes.`
 }
 
 export type ContaLida = {

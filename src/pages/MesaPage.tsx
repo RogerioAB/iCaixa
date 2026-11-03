@@ -1,16 +1,18 @@
-import { useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { LendoComanda } from '../components/Lendo'
 import { CabecalhoRestaurante } from '../components/Restaurante'
 import { Aviso, Cartao, Pagina, botao, botaoPrimario, campo } from '../components/ui'
 import { fecharComanda, lerComanda, type Leitura } from '../lib/api'
 import { formatarReais, normalizarNumero } from '../lib/comanda'
 import { prepararFoto } from '../lib/foto'
+import { buscarRestaurante, type Restaurante } from '../lib/restaurantes'
 import { salvarFoto, salvarUltimo } from '../lib/ultimo'
 
 export default function MesaPage() {
-  const { mesa } = useParams()
+  const { slug = '', mesa } = useParams()
   const navigate = useNavigate()
+  const [restaurante, setRestaurante] = useState<Restaurante | null | undefined>(undefined)
   const [previa, setPrevia] = useState<string | null>(null)
   const [lendo, setLendo] = useState(false)
   const [leitura, setLeitura] = useState<Leitura | null>(null)
@@ -21,6 +23,10 @@ export default function MesaPage() {
 
   const numero = normalizarNumero(numeroDigitado)
 
+  useEffect(() => {
+    buscarRestaurante(slug).then(setRestaurante, (e: Error) => setErro(e.message))
+  }, [slug])
+
   async function aoFotografar(arquivo: File) {
     setErro(null)
     setLeitura(null)
@@ -28,7 +34,7 @@ export default function MesaPage() {
     try {
       const foto = await prepararFoto(arquivo)
       setPrevia(foto.previa)
-      const l = await lerComanda(foto.base64, mesa)
+      const l = await lerComanda(foto.base64, slug, mesa)
       setLeitura(l)
       setNumeroDigitado(l.numero_lido ?? '')
     } catch (e) {
@@ -72,9 +78,25 @@ export default function MesaPage() {
     </label>
   )
 
+  if (restaurante === undefined) {
+    return <Pagina>{erro ? <Aviso tom="erro">{erro}</Aviso> : <p className="text-apagado">Carregando…</p>}</Pagina>
+  }
+  if (restaurante === null) {
+    return (
+      <Pagina>
+        <Cartao titulo="Restaurante não encontrado">
+          <p className="text-sm text-apagado">Este endereço não corresponde a nenhum restaurante. Leia de novo o QR Code que está na sua mesa.</p>
+          <Link to="/" className={botao}>
+            Voltar ao início
+          </Link>
+        </Cartao>
+      </Pagina>
+    )
+  }
+
   return (
     <Pagina>
-      <CabecalhoRestaurante mesa={mesa} />
+      <CabecalhoRestaurante r={restaurante} mesa={mesa} />
       {lendo && <LendoComanda previa={previa} />}
 
       <Cartao titulo="Sua comanda">

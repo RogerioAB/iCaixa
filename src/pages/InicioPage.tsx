@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Cartao, Pagina, botao, botaoPrimario } from '../components/ui'
+import { Cartao, Pagina, botao } from '../components/ui'
 import { lerUltimo } from '../lib/ultimo'
 
 export default function InicioPage() {
@@ -7,19 +7,21 @@ export default function InicioPage() {
   return (
     <Pagina>
       <Cartao titulo="Pague sua comanda na mesa">
-        <p>Leia o QR Code que está na sua mesa, ou comece por aqui. Sem baixar aplicativo e sem cadastro.</p>
-        <Link to="/comanda" className={botaoPrimario}>
-          Pagar minha comanda
-        </Link>
+        <p>Leia o QR Code que está na mesa do restaurante. Você fotografa a comanda, paga com Pix ou cartão e sai sem fila. Sem baixar aplicativo e sem cadastro.</p>
         {ultimo && (
           <Link to={`/c/${ultimo}`} className={botao}>
             Ver meu último pagamento
           </Link>
         )}
       </Cartao>
-      <Link to="/portaria" className="text-center text-sm text-apagado underline">
-        Acesso da portaria
-      </Link>
+      <div className="flex justify-center gap-4 text-sm text-apagado">
+        <Link to="/portaria" className="underline">
+          Portaria
+        </Link>
+        <Link to="/admin" className="underline">
+          Administração
+        </Link>
+      </div>
     </Pagina>
   )
 }

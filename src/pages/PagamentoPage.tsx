@@ -92,7 +92,7 @@ export default function PagamentoPage() {
               : []),
           ]}
         />
-        <Link to="/comanda" className={botao}>
+        <Link to={f.restaurante ? `/${f.restaurante.slug}` : '/'} className={botao}>
           Pagar outra comanda
         </Link>
       </Pagina>
@@ -144,7 +144,7 @@ export default function PagamentoPage() {
         </Cartao>
       )}
       {erro && <Aviso tom="erro">{erro}</Aviso>}
-      <Link to="/comanda" className={botao}>
+      <Link to={f.restaurante ? `/${f.restaurante.slug}` : '/'} className={botao}>
         Fotografar a comanda de novo
       </Link>
     </Pagina>
