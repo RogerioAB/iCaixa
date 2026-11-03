@@ -113,6 +113,7 @@ function EditorRestaurante({ inicial, onVoltar }: { inicial: Restaurante | null;
   const [local, setLocal] = useState(inicial?.local ?? '')
   const [site, setSite] = useState(inicial?.site ?? '')
   const [ativo, setAtivo] = useState(inicial?.ativo ?? true)
+  const [comNumero, setComNumero] = useState(inicial?.comanda_com_numero ?? true)
   const [logo, setLogo] = useState<File | null>(null)
   const [previaLogo, setPreviaLogo] = useState<string | null>(inicial?.logo_url ?? null)
   const [salvando, setSalvando] = useState(false)
@@ -127,7 +128,7 @@ function EditorRestaurante({ inicial, onVoltar }: { inicial: Restaurante | null;
     try {
       const siteNormal = site.trim() ? (/^https?:\/\//.test(site.trim()) ? site.trim() : `https://${site.trim()}`) : null
       const logo_url = logo ? await enviarLogo(slug, logo) : (r?.logo_url ?? null)
-      const salvo = await salvarRestaurante({ id: r?.id, nome: nome.trim(), slug, local: local.trim() || null, site: siteNormal, logo_url, ativo })
+      const salvo = await salvarRestaurante({ id: r?.id, nome: nome.trim(), slug, local: local.trim() || null, site: siteNormal, logo_url, ativo, comanda_com_numero: comNumero })
       setR(salvo)
       setSite(salvo.site ?? '')
       setLogo(null)
@@ -205,6 +206,13 @@ function EditorRestaurante({ inicial, onVoltar }: { inicial: Restaurante | null;
               />
             </label>
           </div>
+          <label className="flex items-start gap-2">
+            <input type="checkbox" className="mt-1" checked={comNumero} onChange={(e) => setComNumero(e.target.checked)} />
+            <span>
+              A comanda tem número impresso
+              <span className="block text-xs text-apagado">Sem número, o iCaixa gera um número no pagamento.</span>
+            </span>
+          </label>
           <label className="flex items-center gap-2">
             <input type="checkbox" checked={ativo} onChange={(e) => setAtivo(e.target.checked)} />
             <span>Ativo (clientes conseguem pagar)</span>

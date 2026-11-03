@@ -45,11 +45,16 @@ export default function MesaPage() {
   }
 
   async function pagar() {
-    if (!leitura || !numero) return
+    const comNumero = restaurante?.comanda_com_numero !== false
+    if (!leitura || (comNumero && !numero)) return
     setEnviando(true)
     setErro(null)
     try {
-      const { id } = await fecharComanda({ leitura_id: leitura.leitura_id, numero, metodo })
+      const { id } = await fecharComanda({
+        leitura_id: leitura.leitura_id,
+        numero: numero ?? '',
+        metodo,
+      })
       salvarUltimo(id)
       if (previa) salvarFoto(id, previa)
       navigate(`/c/${id}`)
@@ -101,8 +106,8 @@ export default function MesaPage() {
 
       <Cartao titulo="Sua comanda">
         <p className="text-sm text-apagado">
-          Coloque a comanda sobre a mesa, bem iluminada, e fotografe ela inteira, do número no topo até o fim das bebidas. O app soma as etiquetas da
-          balança e as bebidas marcadas pelo garçom.
+          Coloque a comanda sobre a mesa, bem iluminada, e fotografe ela inteira{restaurante.comanda_com_numero ? ', do número no topo até o fim das bebidas' : ', com as etiquetas e a grade de bebidas'}. O app
+          soma as etiquetas da balança e as bebidas marcadas pelo garçom.
         </p>
         {previa && <img src={previa} alt="Foto da comanda" className="max-h-72 rounded-xl object-contain" />}
         {!lendo && botaoFoto(previa ? 'Fotografar de novo' : 'Fotografar comanda', !leitura)}
@@ -112,20 +117,22 @@ export default function MesaPage() {
 
       {leitura && (
         <>
-          <Cartao titulo="Número da comanda">
-            <p className="text-sm text-apagado">Confira com o número impresso no topo. Corrija se estiver diferente.</p>
-            <input
-              id="numero"
-              className={`${campo} text-center font-mono text-2xl tracking-[0.12em]`}
-              inputMode="numeric"
-              maxLength={7}
-              placeholder="992"
-              autoComplete="off"
-              value={numeroDigitado}
-              onChange={(e) => setNumeroDigitado(e.target.value.replace(/\D/g, '').slice(0, 7))}
-            />
-            {numero ? <Aviso tom="ok">Comanda {numero}</Aviso> : <Aviso tom="aviso">Não consegui ler o número. Digite os números do topo da comanda.</Aviso>}
-          </Cartao>
+          {restaurante.comanda_com_numero && (
+            <Cartao titulo="Número da comanda">
+              <p className="text-sm text-apagado">Confira com o número impresso no topo. Corrija se estiver diferente.</p>
+              <input
+                id="numero"
+                className={`${campo} text-center font-mono text-2xl tracking-[0.12em]`}
+                inputMode="numeric"
+                maxLength={7}
+                placeholder="992"
+                autoComplete="off"
+                value={numeroDigitado}
+                onChange={(e) => setNumeroDigitado(e.target.value.replace(/\D/g, '').slice(0, 7))}
+              />
+              {numero ? <Aviso tom="ok">Comanda {numero}</Aviso> : <Aviso tom="aviso">Não consegui ler o número. Digite os números do topo da comanda.</Aviso>}
+            </Cartao>
+          )}
 
           <Cartao titulo="O que encontrei">
             {leitura.itens.length === 0 ? (
@@ -174,7 +181,12 @@ export default function MesaPage() {
                 <div className="text-xs tracking-widest text-apagado uppercase">Total</div>
                 <div className="font-mono text-2xl font-semibold tabular-nums">{formatarReais(leitura.total_centavos)}</div>
               </div>
-              <button type="button" className={botaoPrimario} disabled={!numero || leitura.total_centavos <= 0 || enviando} onClick={pagar}>
+              <button
+                type="button"
+                className={botaoPrimario}
+                disabled={(restaurante.comanda_com_numero && !numero) || leitura.total_centavos <= 0 || enviando}
+                onClick={pagar}
+              >
                 {enviando ? 'Enviando…' : 'Pagar'}
               </button>
             </div>

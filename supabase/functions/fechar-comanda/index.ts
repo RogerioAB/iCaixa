@@ -14,8 +14,6 @@ Deno.serve(async (req) => {
 
   const metodo = body.metodo === 'cartao' ? 'cartao' : body.metodo === 'pix' ? 'pix' : null
   if (!metodo) return json({ erro: 'Escolha Pix ou cartão.' }, 400)
-  const numero = normalizarNumero(String(body.numero ?? ''))
-  if (!numero) return json({ erro: 'Confira o número da comanda.' }, 400)
   const leituraId = String(body.leitura_id ?? '')
   if (!UUID.test(leituraId)) return json({ erro: 'Fotografe a comanda de novo.' }, 400)
 
@@ -28,6 +26,23 @@ Deno.serve(async (req) => {
   if (!leitura || Date.now() - new Date(leitura.criado_em).getTime() > VALIDADE_LEITURA_MS) {
     return json({ erro: 'Esta leitura expirou. Fotografe a comanda de novo.' }, 410)
   }
+  const { data: restaurante } = await db
+    .from('restaurantes')
+    .select('comanda_com_numero')
+    .eq('id', leitura.restaurante_id)
+    .single()
+
+  // Comanda sem número impresso: o iCaixa gera um, que vai no QR de saída.
+  let numero: string | null
+  if (restaurante?.comanda_com_numero === false) {
+    const { data: gerado, error: errNumero } = await db.rpc('proximo_numero')
+    if (errNumero || !gerado) return json({ erro: 'Não foi possível gerar o número da comanda.' }, 500)
+    numero = String(gerado)
+  } else {
+    numero = normalizarNumero(String(body.numero ?? ''))
+    if (!numero) return json({ erro: 'Confira o número da comanda.' }, 400)
+  }
+
   if (!(leitura.total_centavos > 0)) return json({ erro: 'Não encontrei nada para cobrar nesta comanda.' }, 400)
 
   const avisos = [...(leitura.avisos ?? [])]

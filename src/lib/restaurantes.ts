@@ -8,6 +8,7 @@ export type Restaurante = {
   site: string | null
   logo_url: string | null
   ativo: boolean
+  comanda_com_numero: boolean
 }
 
 export type Produto = {
@@ -20,7 +21,7 @@ export type Produto = {
   ativo: boolean
 }
 
-const CAMPOS = 'id, slug, nome, local, site, logo_url, ativo'
+const CAMPOS = 'id, slug, nome, local, site, logo_url, ativo, comanda_com_numero'
 
 /** Restaurante ativo pelo endereço (icaixa.zarpa.tech/<slug>). Público. */
 export async function buscarRestaurante(slug: string): Promise<Restaurante | null> {
