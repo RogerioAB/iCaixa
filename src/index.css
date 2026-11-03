@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+@theme {
+  --color-vinho-50: #fbf1f4;
+  --color-vinho-100: #f6e3ea;
+  --color-vinho-600: #9b1b4a;
+  --color-vinho-700: #7d153b;
+  --color-papel: #fffdfc;
+  --color-fundo: #f3eef0;
+  --color-tinta: #2a1a20;
+  --color-apagado: #7a6670;
+  --color-linha: #e3d6db;
+  --font-sans: "Familjen Grotesk", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-fundo);
+  color: var(--color-tinta);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Tela de leitura da comanda */
+@keyframes ampulheta {
+  0%, 70% { transform: rotate(0deg); }
+  85%, 100% { transform: rotate(180deg); }
+}
+@keyframes areia-cai {
+  0% { transform: scaleY(1); }
+  70%, 100% { transform: scaleY(0); }
+}
+@keyframes areia-sobe {
+  0% { transform: scaleY(0); }
+  70%, 100% { transform: scaleY(1); }
+}
+@keyframes varredura {
+  0% { top: 0%; }
+  50% { top: calc(100% - 3px); }
+  100% { top: 0%; }
+}
+@keyframes surgir {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+.ampulheta { animation: ampulheta 2.4s ease-in-out infinite; transform-origin: 50% 50%; }
+.areia-cima { animation: areia-cai 2.4s linear infinite; transform-origin: 50% 100%; transform-box: fill-box; }
+.areia-baixo { animation: areia-sobe 2.4s linear infinite; transform-origin: 50% 100%; transform-box: fill-box; }
+.varredura { animation: varredura 2.6s ease-in-out infinite; }
+.surgir { animation: surgir 0.4s ease-out both; }
+@media (prefers-reduced-motion: reduce) {
+  .ampulheta, .areia-cima, .areia-baixo, .varredura { animation: none; }
+}

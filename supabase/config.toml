@@ -1,0 +1,20 @@
+# Configuração local do Supabase (npx supabase start). Em produção, o projeto "iCaixa"
+# no painel do Supabase. Veja o README.
+project_id = "icaixa"
+
+# Funções públicas: o cliente não tem login.
+[functions.ler-comanda]
+verify_jwt = false
+
+[functions.fechar-comanda]
+verify_jwt = false
+
+[functions.status-fechamento]
+verify_jwt = false
+
+[functions.confirmar-simulado]
+verify_jwt = false
+
+# Portaria: exige login (a função também confere se o usuário está na tabela equipe).
+[functions.validar-saida]
+verify_jwt = true
