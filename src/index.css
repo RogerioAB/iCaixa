@@ -27,3 +27,34 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
 }
+
+/* Tela de leitura da comanda */
+@keyframes ampulheta {
+  0%, 70% { transform: rotate(0deg); }
+  85%, 100% { transform: rotate(180deg); }
+}
+@keyframes areia-cai {
+  0% { transform: scaleY(1); }
+  70%, 100% { transform: scaleY(0); }
+}
+@keyframes areia-sobe {
+  0% { transform: scaleY(0); }
+  70%, 100% { transform: scaleY(1); }
+}
+@keyframes varredura {
+  0% { top: 0%; }
+  50% { top: calc(100% - 3px); }
+  100% { top: 0%; }
+}
+@keyframes surgir {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+.ampulheta { animation: ampulheta 2.4s ease-in-out infinite; transform-origin: 50% 50%; }
+.areia-cima { animation: areia-cai 2.4s linear infinite; transform-origin: 50% 100%; transform-box: fill-box; }
+.areia-baixo { animation: areia-sobe 2.4s linear infinite; transform-origin: 50% 100%; transform-box: fill-box; }
+.varredura { animation: varredura 2.6s ease-in-out infinite; }
+.surgir { animation: surgir 0.4s ease-out both; }
+@media (prefers-reduced-motion: reduce) {
+  .ampulheta, .areia-cima, .areia-baixo, .varredura { animation: none; }
+}

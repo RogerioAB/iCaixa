@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { LendoComanda } from '../components/Lendo'
+import { CabecalhoRestaurante } from '../components/Restaurante'
 import { Aviso, Cartao, Pagina, botao, botaoPrimario, campo } from '../components/ui'
 import { fecharComanda, lerComanda, type Leitura } from '../lib/api'
 import { formatarReais, normalizarNumero } from '../lib/comanda'
@@ -72,7 +74,8 @@ export default function MesaPage() {
 
   return (
     <Pagina>
-      {mesa && <p className="text-sm text-apagado">Mesa {mesa}</p>}
+      <CabecalhoRestaurante mesa={mesa} />
+      {lendo && <LendoComanda previa={previa} />}
 
       <Cartao titulo="Sua comanda">
         <p className="text-sm text-apagado">
@@ -80,7 +83,7 @@ export default function MesaPage() {
           balança e as bebidas marcadas pelo garçom.
         </p>
         {previa && <img src={previa} alt="Foto da comanda" className="max-h-72 rounded-xl object-contain" />}
-        {lendo ? <Aviso tom="aviso">Lendo a comanda… isso leva alguns segundos.</Aviso> : botaoFoto(previa ? 'Fotografar de novo' : 'Fotografar comanda', !leitura)}
+        {!lendo && botaoFoto(previa ? 'Fotografar de novo' : 'Fotografar comanda', !leitura)}
       </Cartao>
 
       {erro && <Aviso tom="erro">{erro}</Aviso>}
