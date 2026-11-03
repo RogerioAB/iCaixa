@@ -3,7 +3,7 @@ import { montarContaDaLeitura, promptLeitura, schemaExtracao, type Extracao } fr
 
 const produtos = [
   { id: 'agua', nome: 'Água mineral', preco_centavos: 600, linha_comanda: 'Água' },
-  { id: 'suco-laranja', nome: 'Suco de laranja', preco_centavos: 1200, linha_comanda: 'Suco Laranja/Limão' },
+  { id: 'suco-laranja-limao', nome: 'Suco de laranja ou limão', preco_centavos: 1200, linha_comanda: 'Suco Laranja/Limão' },
   { id: 'caipirinha', nome: 'Caipirinha', preco_centavos: 2000, linha_comanda: 'Caipirinha' },
 ]
 
@@ -53,8 +53,8 @@ describe('montarContaDaLeitura', () => {
 
 describe('prompt e schema', () => {
   it('listam as linhas da comanda e só aceitam produtos conhecidos', () => {
-    expect(promptLeitura(produtos)).toContain('linha "Suco Laranja/Limão" -> produto_id "suco-laranja"')
+    expect(promptLeitura(produtos)).toContain('linha "Suco Laranja/Limão" -> produto_id "suco-laranja-limao"')
     const s = schemaExtracao(produtos.map((p) => p.id)) as { properties: { bebidas: { items: { properties: { produto_id: { enum: string[] } } } } } }
-    expect(s.properties.bebidas.items.properties.produto_id.enum).toEqual(['agua', 'suco-laranja', 'caipirinha'])
+    expect(s.properties.bebidas.items.properties.produto_id.enum).toEqual(['agua', 'suco-laranja-limao', 'caipirinha'])
   })
 })

@@ -27,8 +27,8 @@ As regras de negócio ficam em `supabase/functions/_shared/`: `comanda.ts` (etiq
 ### Leitura da comanda
 
 - **Etiquetas:** vale o código de barras (com o dígito verificador conferido). Se ele estiver ilegível, entra o TOTAL impresso, com um aviso para a portaria.
-- **Bebidas:** cada célula marcada na grade vale 1 unidade. Se o garçom escrever um número, vale o número. O preço vem sempre da tabela `produtos`, nunca da IA. A coluna `linha_comanda` diz qual linha impressa corresponde a cada produto.
-- **Avisos:** dúvidas da leitura (marca ambígua, sabor do suco não indicado, texto à mão) aparecem para o cliente e para a portaria.
+- **Bebidas:** o garçom faz um risco por unidade (não escreve números), e a IA conta os riscos de cada linha. Suco de laranja e de limão têm o mesmo preço e são um item só. O preço vem sempre da tabela `produtos`, nunca da IA. A coluna `linha_comanda` diz qual linha impressa corresponde a cada produto.
+- **Avisos:** dúvidas da leitura (risco ambíguo, texto à mão) aparecem para o cliente e para a portaria.
 
 ### Etiqueta da balança
 

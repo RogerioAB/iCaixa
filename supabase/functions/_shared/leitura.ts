@@ -62,15 +62,14 @@ export function promptLeitura(produtos: ProdutoComanda[]): string {
 Como a comanda é:
 - No topo, à direita, há o número da comanda com 7 dígitos (ex.: 0000992). Os primeiros dígitos às vezes saem falhados; devolva só os dígitos que conseguir ler com segurança, sem inventar.
 - Etiquetas adesivas da balança (comida, "DIVERSOS", sobremesa) podem estar coladas em qualquer lugar. Cada uma tem "TOTAL R$" impresso e um código de barras com 13 dígitos impressos embaixo, começando com 2. Para cada etiqueta, devolva os 13 dígitos exatamente como impressos (null se não der para ler todos) e o TOTAL impresso em centavos (R$ 21,93 -> 2193).
-- A grade "BEBIDAS" tem uma linha por bebida e várias colunas. O garçom marca à mão o que o cliente pediu. Conte por linha: cada célula com marca (risco, X, visto, rabisco) vale 1 unidade; se o garçom escreveu um número na célula, use esse número. Ignore linhas sem marca.
+- A grade "BEBIDAS" tem uma linha por bebida e várias colunas. O garçom faz um risco para cada unidade pedida; ele não escreve números. Conte os riscos de cada linha: cada risco vale 1 unidade. Ignore linhas sem risco.
 - Linhas da grade e o produto_id de cada uma:
 ${linhas}
-- Na linha "Suco Laranja/Limão", se houver anotação indicando limão (ex.: "lim", "L"), use o produto de limão; senão, use o de laranja e registre em anotacoes que o sabor não foi indicado.
 - Se algo estiver escrito à mão numa linha em branco da grade ou no quadro SOBREMESAS, não converta em produto: copie o texto em anotacoes.
 
 Regras:
 - Não invente nada. Se a foto estiver cortada, borrada ou não for uma comanda, marque foto_legivel = false e explique em anotacoes.
-- Se uma marca for ambígua, conte-a e descreva a dúvida em anotacoes.`
+- Se um risco for ambíguo (ex.: pode ser sujeira ou um risco cortado), conte-o e descreva a dúvida em anotacoes.`
 }
 
 export type ContaLida = {
