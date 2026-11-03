@@ -61,10 +61,10 @@ insert into public.equipe (user_id, nome, papel)
 select id, 'Portaria', 'portaria' from auth.users where email = 'portaria@exemplo.com';
 ```
 
-**Preços:** ficam na tabela `produtos`. A taça de vinho começa inativa, porque o preço ainda não foi confirmado. Para ativá-la:
+**Preços:** ficam na tabela `produtos`. Para mudar um preço:
 
 ```sql
-update public.produtos set preco_centavos = 2200, ativo = true where id = 'taca-vinho';
+update public.produtos set preco_centavos = 2500 where id = 'taca-vinho';
 ```
 
 ## Deploy (Coolify)

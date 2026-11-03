@@ -74,7 +74,6 @@ create policy fechamentos_equipe on public.fechamentos for select to authenticat
   using (public.eh_equipe());
 
 -- Preços informados pelo restaurante em 03/11/2026.
--- A taça de vinho ainda não tem preço confirmado, por isso começa inativa.
 insert into public.produtos (id, nome, preco_centavos, ordem, ativo) values
   ('refrigerante',  'Refrigerante (lata 350 ml)', 800, 10, true),
   ('agua',          'Água mineral',               600, 20, true),
@@ -84,7 +83,7 @@ insert into public.produtos (id, nome, preco_centavos, ordem, ativo) values
   ('suco-fruta',    'Suco de fruta (polpa)',     1200, 60, true),
   ('suco-mix',      'Suco mix (2 frutas)',       1500, 70, true),
   ('cha',           'Chá artesanal',             1400, 80, true),
-  ('taca-vinho',    'Taça de vinho 200 ml',      2200, 90, false),
+  ('taca-vinho',    'Taça de vinho 200 ml',      2500, 90, true),
   ('vinho-tinto',   'Garrafa de vinho tinto',   12000, 100, true),
   ('vinho-branco',  'Garrafa de vinho branco',   9500, 110, true),
   ('caipirinha',    'Caipirinha',                2000, 120, true),
