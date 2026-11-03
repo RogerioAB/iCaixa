@@ -9,7 +9,11 @@ export function Login({ titulo }: { titulo: string }) {
   async function entrar(e: FormEvent) {
     e.preventDefault()
     const { error } = await supabase.auth.signInWithPassword({ email, password: senha })
-    if (error) setErro('E-mail ou senha incorretos.')
+    if (!error) return
+    const msg = error.message.toLowerCase()
+    if (msg.includes('invalid login credentials')) setErro('E-mail ou senha incorretos.')
+    else if (msg.includes('not confirmed')) setErro('Este e-mail ainda não foi confirmado. No Supabase, confirme o usuário em Authentication → Users.')
+    else setErro(`Não foi possível entrar: ${error.message}`)
   }
   return (
     <Cartao titulo={titulo}>
