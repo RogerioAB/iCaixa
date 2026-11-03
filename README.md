@@ -53,6 +53,8 @@ npm test               # regras de negócio
 
 ## Supabase
 
+**Publicação automática:** o workflow `.github/workflows/supabase.yml` aplica as migrations e publica as Edge Functions a cada push em `main` (ou `fluxo-inicial`) que mexa em `supabase/`. Ele precisa de dois segredos no GitHub, em Settings → Secrets and variables → Actions: `SUPABASE_ACCESS_TOKEN` (gerado em supabase.com/dashboard/account/tokens) e `SUPABASE_DB_PASSWORD` (senha do banco do projeto). Também dá para rodar à mão em Actions → Publicar no Supabase → Run workflow. Os comandos abaixo são a alternativa manual.
+
 ```bash
 npx supabase login
 npx supabase link --project-ref <project-ref-do-iCaixa>
