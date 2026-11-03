@@ -18,3 +18,24 @@ export function lerUltimo(): string | null {
     return null
   }
 }
+
+// Foto da comanda do último fechamento, para o cliente mostrar na portaria.
+// Fica só neste celular (cerca de 700 KB). Guarda uma por vez.
+const CHAVE_FOTO = 'icaixa:foto-comanda'
+
+export function salvarFoto(id: string, foto: string) {
+  try {
+    localStorage.setItem(CHAVE_FOTO, JSON.stringify({ id, foto }))
+  } catch {
+    /* sem espaço ou navegação privada: segue sem a foto */
+  }
+}
+
+export function lerFoto(id: string): string | null {
+  try {
+    const v = JSON.parse(localStorage.getItem(CHAVE_FOTO) ?? 'null') as { id: string; foto: string } | null
+    return v?.id === id ? v.foto : null
+  } catch {
+    return null
+  }
+}

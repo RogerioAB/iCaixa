@@ -4,7 +4,7 @@ import { Aviso, Cartao, Pagina, botao, botaoPrimario, campo } from '../component
 import { fecharComanda, lerComanda, type Leitura } from '../lib/api'
 import { formatarReais, normalizarNumero } from '../lib/comanda'
 import { prepararFoto } from '../lib/foto'
-import { salvarUltimo } from '../lib/ultimo'
+import { salvarFoto, salvarUltimo } from '../lib/ultimo'
 
 export default function MesaPage() {
   const { mesa } = useParams()
@@ -43,6 +43,7 @@ export default function MesaPage() {
     try {
       const { id } = await fecharComanda({ leitura_id: leitura.leitura_id, numero, metodo })
       salvarUltimo(id)
+      if (previa) salvarFoto(id, previa)
       navigate(`/c/${id}`)
     } catch (e) {
       setErro((e as Error).message)
